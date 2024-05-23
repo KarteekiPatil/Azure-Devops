@@ -1,0 +1,32 @@
+trigger:
+- main
+
+variables:
+  azureSubscription: '22ebdf17-ad01-4f71-a895-cb078a581d15'
+  resourceGroupName: 'AKS-RG'
+  location: 'East US'
+  aksClusterName: 'myAKSCluster'
+
+stages:
+- stage: Deploy
+  jobs:
+  - job: DeployAKS
+    displayName: 'Deploy AKS Cluster'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          # Create Resource Group if it doesn't exist
+          az group create --name $(resourceGroupName) --location $(location)
+
+          # Deploy the AKS cluster using Bicep template
+          az deployment group create \
+            --resource-group $(resourceGroupName) \
+            --template-file aks-cluster.bicep \
+            --parameters aksClusterName=$(aksClusterName) location=$(location)
+      displayName: 'Deploy AKS Cluster using Bicep'
